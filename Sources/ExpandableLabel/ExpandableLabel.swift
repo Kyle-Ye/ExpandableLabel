@@ -1,6 +1,3 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-
 import os.log
 import SnapKit
 import UIKit
@@ -12,10 +9,28 @@ public final class ExpandableLabel: YYLabel {
         public var font: UIFont
         public var textColor: UIColor
         public var buttonColor: UIColor?
-        /// 未展开的最大行数
-        public var unexpandedMaxLines: UInt = 3
-        /// 展开后的最大行数，默认为0，无限制
-        public var expandedMaxLines: UInt = 0
+        /// Max lines for unexpanded state
+        public var unexpandedMaxLines: UInt
+        /// Max lines for expanded state
+        public var expandedMaxLines: UInt
+
+        public init(
+            width: Double,
+            font: UIFont,
+            multilineStyle: MultilineStyle,
+            textColor: UIColor,
+            buttonColor: UIColor? = nil,
+            unexpandedMaxLines: UInt = 3,
+            expandedMaxLines: UInt = 0
+        ) {
+            self.width = width
+            self.font = font
+            self.multilineStyle = multilineStyle
+            self.textColor = textColor
+            self.buttonColor = buttonColor
+            self.unexpandedMaxLines = unexpandedMaxLines
+            self.expandedMaxLines = expandedMaxLines
+        }
     }
     
     private static let logger = Logger(
