@@ -1,3 +1,10 @@
+//
+//  ExpandableLabel.swift
+//
+//
+//  Created by Kyle on 2024/6/7.
+//
+
 import os.log
 import SnapKit
 import UIKit
@@ -13,24 +20,34 @@ public final class ExpandableLabel: YYLabel {
         public var unexpandedMaxLines: UInt
         /// Max lines for expanded state
         public var expandedMaxLines: UInt
-
+        public var expandableScope: ExpandableScope
+        
         public init(
             width: Double,
             font: UIFont,
-            multilineStyle: MultilineStyle,
             textColor: UIColor,
             buttonColor: UIColor? = nil,
             unexpandedMaxLines: UInt = 3,
-            expandedMaxLines: UInt = 0
+            expandedMaxLines: UInt = 0,
+            expandableScope: ExpandableScope = .button
         ) {
             self.width = width
             self.font = font
-            self.multilineStyle = multilineStyle
             self.textColor = textColor
             self.buttonColor = buttonColor
             self.unexpandedMaxLines = unexpandedMaxLines
             self.expandedMaxLines = expandedMaxLines
+            self.expandableScope = expandableScope
         }
+    }
+    
+    public enum ExpandableScope: Int, CaseIterable {
+        case button
+        case text
+    }
+    
+    public protocol Delegate: AnyObject {
+        func expandableLabel(_ label: ExpandableLabel, didChangeExpandState isExpanded: Bool)
     }
     
     private static let logger = Logger(
@@ -44,6 +61,8 @@ public final class ExpandableLabel: YYLabel {
         }
     }
     
+    private weak var delegate: Delegate?
+    
     private var width: Double {
         configuration.width
     }
@@ -52,11 +71,30 @@ public final class ExpandableLabel: YYLabel {
         configuration.font.lineHeight
     }
     
-    public func update(configuration: Configuration) {
-        self.configuration = configuration
+    public func update(configuration: Configuration? = nil, delegate: Delegate? = nil) {
+        if let configuration {
+            self.configuration = configuration
+        }
+        if let delegate {
+            self.delegate = delegate
+        }
     }
     
+    private lazy var tapGesture = {
+        let gesture = UITapGestureRecognizer()
+        gesture.addTarget(self, action: #selector(toggleExpand))
+        return gesture
+    }()
+    
     private func didUpdateConfiguration() {
+        expandButton.removeTarget(self, action: #selector(toggleExpand), for: .touchUpInside)
+        removeGestureRecognizer(tapGesture)
+        switch configuration.expandableScope {
+            case .button:
+                expandButton.addTarget(self, action: #selector(toggleExpand), for: .touchUpInside)
+            case .text:
+                addGestureRecognizer(tapGesture)
+        }
         font = configuration.font
         tintColor = configuration.textColor
         expandButton.tintColor = configuration.buttonColor ?? configuration.textColor
@@ -91,17 +129,13 @@ public final class ExpandableLabel: YYLabel {
                     make.size.equalTo(lineHeight)
                     make.trailing.bottom.equalToSuperview()
                 }
-                // For 22.4 lineHeight, we want button 22.4, image 16
-                // The padding is 1/7 lineHeight
-                let insetPadding = lineHeight / 7
+                let insetPadding = lineHeight / 8
                 expandButton.imageView?.snp.remakeConstraints { make in
                     make.center.equalToSuperview()
                     make.size.equalToSuperview().inset(insetPadding)
                 }
                 
-                // For 22.4 lineHeight, we want button 22.4, image 16
-                // The outsetPadding is 11/28 lineHeight
-                let outsetPadding = lineHeight * 11 / 28
+                let outsetPadding = lineHeight / 8
                 expandButton.tapAreaInsets = UIEdgeInsets(top: outsetPadding, left: outsetPadding, bottom: outsetPadding, right: outsetPadding)
             } else {
                 expandButton.removeFromSuperview()
@@ -161,8 +195,9 @@ public final class ExpandableLabel: YYLabel {
         }
     }
     
-    public init(configuration: Configuration) {
+    public init(configuration: Configuration, delegate: Delegate? = nil) {
         self.configuration = configuration
+        self.delegate = delegate
         super.init(frame: .zero)
         didUpdateConfiguration()
     }
@@ -184,6 +219,7 @@ public final class ExpandableLabel: YYLabel {
         Self.logger.info("ExpandableLabel button click")
         isExpanded.toggle()
         layoutIfNeeded()
+        delegate?.expandableLabel(self, didChangeExpandState: isExpanded)
     }
     
     override public var intrinsicContentSize: CGSize {
@@ -193,3 +229,12 @@ public final class ExpandableLabel: YYLabel {
         )
     }
 }
+
+#if DEBUG
+import SwiftUI
+
+@available(iOS 16, *)
+#Preview {
+    ExpandableLabelLivePreview()
+}
+#endif
