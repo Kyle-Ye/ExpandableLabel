@@ -1,0 +1,24 @@
+{
+  "originHash" : "74848eaea979f8909d601c793e9633c854d6c5e1c0e2032ca05457353f75d3ce",
+  "pins" : [
+    {
+      "identity" : "snapkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SnapKit/SnapKit.git",
+      "state" : {
+        "revision" : "2842e6e84e82eb9a8dac0100ca90d9444b0307f4",
+        "version" : "5.7.1"
+      }
+    },
+    {
+      "identity" : "yytext",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Kyle-Ye/YYText.git",
+      "state" : {
+        "revision" : "9ed6ea67fc8f5ff78164177a756e5602dd248297",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}
